@@ -4,7 +4,7 @@
 
   const DIFFICULTIES = {
     beginner: { name: "初級", h: 8, w: 12, count: 96, cell: 50 },
-    intermediate: { name: "中級", h: 20, w: 24, count: 480, cell: 30 },
+    intermediate: { name: "中級", h: 16, w: 30, count: 480, cell: 30 },
     advanced: { name: "上級", h: 25, w: 40, count: 1000, cell: 25 }
   };
 
