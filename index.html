@@ -1,6 +1,6 @@
+
 <!doctype html>
 <html lang="ja">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,71 +15,115 @@
       <div>
         <p class="eyebrow">A DIFFERENT KIND OF MINESWEEPER</p>
         <h1>POLYGON MINESWEEPER</h1>
-        <p class="subtitle">五角形と六角形のマスから、爆弾を見つけ出そう。</p>
+        <p class="subtitle">
+          五角形と六角形のマスから、爆弾を見つけ出そう。
+        </p>
       </div>
+
       <div class="top-actions">
-        <!-- 別リポジトリで公開する場合は、hrefをゲーム選択ページの公開URLに変更 -->
-        <a class="ghost-button collection-link" href="https://tanukineiri31514.github.io/MINESWEEPER_COLLECTION/" aria-label="ゲーム選択画面へ戻る">← ゲーム選択</a>
-        <button id="help-button" class="icon-button" type="button" aria-label="遊び方" title="操作方法を表示">?</button>
-        <button id="menu-button" class="ghost-button" type="button">難易度選択</button>
+        <a
+          class="ghost-button collection-link"
+          href="https://tanukineiri31514.github.io/MINESWEEPER_COLLECTION/"
+          aria-label="ゲーム選択画面へ戻る"
+        >← ゲーム選択</a>
+
+        <button id="help-button" class="icon-button"
+          type="button" aria-label="遊び方">?</button>
+
+        <button id="menu-button" class="ghost-button"
+          type="button">難易度選択</button>
       </div>
     </header>
 
     <nav class="tab-menu" aria-label="ページ切り替え">
-      <button class="tab-button active" data-tab="game" type="button">ゲーム</button>
-      <button class="tab-button" data-tab="rules" type="button">ルール説明</button>
+      <button class="tab-button active"
+        data-tab="game" type="button">ゲーム</button>
+      <button class="tab-button"
+        data-tab="rules" type="button">ルール説明</button>
     </nav>
 
+    <!-- 難易度選択画面 -->
     <section id="menu-screen" class="menu-screen panel">
       <div class="section-heading">
         <p class="eyebrow">SELECT MODE</p>
         <h2>マスの形・難易度を選択</h2>
-        <p>五角形は辺と角、六角形は辺を共有するマスの爆弾数を数えます。</p>
+        <p>
+          五角形は辺と角、六角形は辺を共有するマスの
+          爆弾数を数えます。
+        </p>
       </div>
 
+      <!-- 図形選択 -->
       <div class="shape-grid" role="group" aria-label="マスの形">
-        <button class="shape-card selected" data-shape="pentagon" type="button" aria-pressed="true">
-          <svg viewBox="0 0 94 60" aria-hidden="true"><polygon points="12,40 38,40 38,17 25,5 12,17"/><polygon points="38,40 64,40 64,17 51,5 38,17"/><polygon points="25,40 51,40 51,55 38,47 25,55"/></svg>
+        <button class="shape-card selected"
+          data-shape="pentagon" type="button"
+          aria-pressed="true">
+          <svg viewBox="0 0 94 60" aria-hidden="true">
+            <polygon points="12,40 38,40 38,17 25,5 12,17"/>
+            <polygon points="38,40 64,40 64,17 51,5 38,17"/>
+            <polygon points="25,40 51,40 51,55 38,47 25,55"/>
+          </svg>
           <strong>五角形</strong>
           <small>辺・角の隣接（最大7マス）</small>
         </button>
-        <button class="shape-card" data-shape="hexagon" type="button" aria-pressed="false">
-          <svg viewBox="0 0 94 60" aria-hidden="true"><polygon points="23,4 37,12 37,28 23,36 9,28 9,12"/><polygon points="51,4 65,12 65,28 51,36 37,28 37,12"/><polygon points="37,28 51,36 51,52 37,60 23,52 23,36"/></svg>
+
+        <button class="shape-card"
+          data-shape="hexagon" type="button"
+          aria-pressed="false">
+          <svg viewBox="0 0 94 60" aria-hidden="true">
+            <polygon points="23,4 37,12 37,28 23,36 9,28 9,12"/>
+            <polygon points="51,4 65,12 65,28 51,36 37,28 37,12"/>
+            <polygon points="37,28 51,36 51,52 37,60 23,52 23,36"/>
+          </svg>
           <strong>六角形</strong>
           <small>辺の隣接（最大6マス）</small>
         </button>
       </div>
 
+      <!-- 4段階の難易度 -->
       <div class="difficulty-grid">
-        <button class="difficulty-card" data-difficulty="beginner" type="button">
+        <button class="difficulty-card"
+          data-difficulty="beginner" type="button">
           <span class="difficulty-name">初級</span>
           <strong>96 マス</strong>
-          <span>爆弾 <span data-bomb-count="beginner">13</span> 個</span>
+          <span>爆弾 <span data-bomb-count="beginner">15</span> 個</span>
         </button>
-        <button class="difficulty-card" data-difficulty="intermediate" type="button">
+
+        <button class="difficulty-card"
+          data-difficulty="intermediate" type="button">
           <span class="difficulty-name">中級</span>
           <strong>480 マス</strong>
           <span>爆弾 <span data-bomb-count="intermediate">67</span> 個</span>
         </button>
-        <button class="difficulty-card" data-difficulty="advanced" type="button">
+
+        <button class="difficulty-card"
+          data-difficulty="advanced" type="button">
           <span class="difficulty-name">上級</span>
           <strong>1000 マス</strong>
-          <span>爆弾 <span data-bomb-count="advanced">145</span> 個</span>
+          <span>爆弾 <span data-bomb-count="advanced">165</span> 個</span>
+        </button>
+
+        <button class="difficulty-card"
+          data-difficulty="expert" type="button">
+          <span class="difficulty-name">最上級</span>
+          <strong>2400 マス</strong>
+          <span>爆弾 <span data-bomb-count="expert">360</span> 個</span>
         </button>
       </div>
 
       <div class="rule-strip">
         <span>操作モードを切り替えてマスを操作</span>
-        <span>PCは右クリックで旗、Shift＋右クリックで？を操作可能</span>
-        <span>最初のクリックでは複数の安全なマスが開きます</span>
+        <span>右クリックで旗、Shift＋右クリックで？</span>
+        <span>最初のクリックで安全なマスが開きます</span>
       </div>
     </section>
 
+    <!-- ゲーム画面 -->
     <section id="game-screen" class="game-screen hidden">
       <div class="hud panel">
         <div class="hud-item">
           <span class="hud-label">BOMBS</span>
-          <strong id="bomb-count">007</strong>
+          <strong id="bomb-count">015</strong>
         </div>
 
         <div class="hud-item">
@@ -92,29 +136,42 @@
           <strong id="timer">000</strong>
         </div>
 
-        <button id="restart-button" class="restart-button" type="button" aria-label="リスタート">↻</button>
+        <button id="restart-button" class="restart-button"
+          type="button" aria-label="リスタート">↻</button>
       </div>
 
       <div class="game-meta">
         <span id="current-mode">五角形 / 初級</span>
-        <span id="board-size">100 マス</span>
-        <span id="game-message" aria-live="polite">最初のマスを選んでスタート！</span>
+        <span id="board-size">96 マス</span>
+        <span id="game-message" aria-live="polite">
+          最初のマスを選んでスタート！
+        </span>
       </div>
 
-      <!-- 操作モード切り替え -->
-      <div class="action-mode" role="group" aria-label="マスの操作モード">
+      <!-- 操作モード -->
+      <div class="action-mode" role="group"
+        aria-label="マスの操作モード">
+
         <span class="action-mode-label">操作モード</span>
 
-        <button id="open-mode-button" class="mode-button active" data-action-mode="open" type="button"
-          aria-pressed="true">
+        <button id="open-mode-button"
+          class="mode-button active"
+          data-action-mode="open"
+          type="button" aria-pressed="true">
           開く
         </button>
 
-        <button id="flag-mode-button" class="mode-button" data-action-mode="flag" type="button" aria-pressed="false">
+        <button id="flag-mode-button"
+          class="mode-button"
+          data-action-mode="flag"
+          type="button" aria-pressed="false">
           ⚑ 旗を立てる
         </button>
 
-        <button id="question-mode-button" class="mode-button" data-action-mode="question" type="button" aria-pressed="false">
+        <button id="question-mode-button"
+          class="mode-button"
+          data-action-mode="question"
+          type="button" aria-pressed="false">
           ？ 仮置き
         </button>
 
@@ -123,93 +180,130 @@
         </span>
       </div>
 
+      <!-- 拡大縮小 -->
       <div class="zoom-controls" aria-label="盤面の拡大縮小">
-        <button id="zoom-out-button" type="button" aria-label="縮小">−</button>
-        <button id="zoom-reset-button" type="button" aria-label="倍率を100%に戻す">100%</button>
-        <button id="zoom-in-button" type="button" aria-label="拡大">＋</button>
+        <button id="zoom-out-button"
+          type="button" aria-label="縮小">−</button>
+        <button id="zoom-reset-button"
+          type="button" aria-label="倍率を100%に戻す">100%</button>
+        <button id="zoom-in-button"
+          type="button" aria-label="拡大">＋</button>
       </div>
 
+      <!-- 盤面 -->
       <div id="board-viewport" class="board-viewport">
         <div id="board-stage" class="board-stage">
-          <canvas id="board" aria-label="多角形マインスイーパー盤面"></canvas>
+          <canvas id="board"
+            aria-label="多角形マインスイーパー盤面"></canvas>
         </div>
       </div>
 
       <div class="bottom-bar">
-        <p id="neighbor-hint">数字は辺・角で接するマスの爆弾数（最大7）</p>
+        <p id="neighbor-hint">
+          数字は辺・角で接するマスの爆弾数（最大7）
+        </p>
         <p>スクロールして盤面全体を確認できます</p>
       </div>
     </section>
 
+    <!-- ルール説明 -->
     <section id="rules-screen" class="panel rules-screen hidden">
       <div class="section-heading">
         <p class="eyebrow">HOW TO PLAY</p>
         <h2>ルール説明</h2>
       </div>
+
       <h3>基本ルール</h3>
       <ul>
         <li>マスを開いて、隠れた爆弾を避けます。</li>
-        <li>五角形は辺か角（頂点）で接するマス、六角形は辺を共有するマスだけの爆弾数を表示します。</li>
-        <li>五角形は最大7マス、六角形は最大6マスを数えます。</li>
+        <li>五角形は辺・頂点、六角形は辺で接するマスを数えます。</li>
+        <li>五角形は最大7マス、六角形は最大6マスです。</li>
         <li>爆弾以外のマスをすべて開くとクリアです。</li>
       </ul>
+
       <h3>操作方法</h3>
       <ul>
-        <li>「開く」モード：マスをタップすると開きます。</li>
-        <li>「旗を立てる」モード：爆弾があると確信したマスに旗を立てる・外します。</li>
-        <li>「？ 仮置き」モード：爆弾かもしれないマスに？を付ける・外します。</li>
-        <li>旗と？は同時に置けず、切り替えできます。？のマスは開くことができます。</li>
-        <li>PCでは右クリックで旗、Shift＋右クリックで？を操作できます。</li>
-        <li>Rキー：リスタート / Escキー：難易度選択に戻る</li>
-        <li>−／＋／100%ボタンで倍率を調整できます。PCはCtrl＋ホイール、スマホはピンチでも拡大縮小できます。</li>
+        <li>「開く」モード：マスをタップして開きます。</li>
+        <li>「旗を立てる」モード：旗を立てる・外します。</li>
+        <li>「？ 仮置き」モード：？を付ける・外します。</li>
+        <li>旗と？は切り替え可能です。？のマスは開けます。</li>
+        <li>PC：右クリックで旗、Shift＋右クリックで？</li>
+        <li>Rキー：リスタート</li>
+        <li>Escキー：難易度選択に戻る</li>
+        <li>＋／−／100%ボタンで拡大縮小できます。</li>
+        <li>PCはCtrl＋ホイール、スマホはピンチ操作にも対応。</li>
       </ul>
+
       <h3>特殊ルール</h3>
       <ul>
-        <li>最初に開いたマスは安全で、原則8マス以上の安全な領域が開きます。</li>
-        <li>数字が0のマスは、各形状の隣接ルールに従って自動で開きます。</li>
+        <li>初手は安全で、原則8マス以上が開放されます。</li>
+        <li>数字が0の場合、隣接するマスも自動で開きます。</li>
       </ul>
+
       <h3>難易度</h3>
       <ul>
-        <li>初級：100マス / 爆弾<span data-rule-bombs="beginner">13</span>個</li>
-        <li>中級：480マス / 爆弾<span data-rule-bombs="intermediate">67</span>個</li>
-        <li>上級：1000マス / 爆弾<span data-rule-bombs="advanced">145</span>個</li>
+        <li>初級：8×12 / 爆弾
+          <span data-rule-bombs="beginner">15</span>個
+        </li>
+        <li>中級：16×30 / 爆弾
+          <span data-rule-bombs="intermediate">67</span>個
+        </li>
+        <li>上級：25×40 / 爆弾
+          <span data-rule-bombs="advanced">165</span>個
+        </li>
+        <li>最上級：40×60 / 爆弾
+          <span data-rule-bombs="expert">360</span>個
+        </li>
       </ul>
+
       <h3>数字の見方</h3>
-      <p>五角形は頂点だけで接しているマスも数えます。六角形は辺を共有するマスだけを数えます。同じ爆弾は一度しか数えません。</p>
+      <p>
+        五角形は頂点だけで接するマスも数えます。
+        六角形は辺を共有するマスだけを数えます。
+        同じ爆弾は一度しか数えません。
+      </p>
     </section>
 
+    <!-- ヘルプ -->
     <dialog id="help-dialog" class="help-dialog">
       <form method="dialog">
-        <button class="dialog-close" type="submit" aria-label="閉じる">×</button>
+        <button class="dialog-close"
+          type="submit" aria-label="閉じる">×</button>
         <p class="eyebrow">HOW TO PLAY</p>
         <h2>操作方法</h2>
-
         <ul>
-          <li>五角形：辺と角で接するマスの爆弾数（最大7）。</li>
-          <li>六角形：辺を共有するマスの爆弾数（最大6）。</li>
-          <li>「開く」モード：マスをタップすると開きます。</li>
-          <li>「旗を立てる」モード：マスをタップすると旗を立てる・外します。</li>
-          <li>「？ 仮置き」モード：マスをタップすると？を付ける・外します。</li>
-          <li>PCでは右クリックで旗、Shift＋右クリックで？を操作できます。</li>
-          <li>Rキー：リスタート / Escキー：難易度選択に戻る</li>
-          <li>数字が0のマスは隣接するマスも自動で開きます。</li>
+          <li>五角形：辺・角で接するマスの爆弾数（最大7）</li>
+          <li>六角形：辺で接するマスの爆弾数（最大6）</li>
+          <li>「開く」：マスを開きます。</li>
+          <li>「旗」：旗を立てる・外す。</li>
+          <li>「？」：仮置き・解除。</li>
+          <li>右クリック：旗、Shift＋右クリック：？</li>
+          <li>R：リスタート / Esc：難易度選択</li>
+          <li>数字が0なら周囲も自動で開きます。</li>
         </ul>
-
-        <button class="primary-button dialog-ok" type="submit">わかった</button>
+        <button class="primary-button dialog-ok"
+          type="submit">わかった</button>
       </form>
     </dialog>
 
-    <div id="clear-overlay" class="hidden" role="status" aria-live="polite">
+    <!-- クリア演出 -->
+    <div id="clear-overlay" class="hidden"
+      role="status" aria-live="polite">
       <div class="clear-message">
         <div>クリア！おめでとう！！</div>
-        <p class="clear-dismiss-hint">クリック・タップで閉じる（5秒後に自動で消えます）</p>
+        <p class="clear-dismiss-hint">
+          クリック・タップで閉じる（5秒後に自動で消えます）
+        </p>
       </div>
     </div>
 
-    <footer>POLYGON MINESWEEPER <span>・</span> Created by tanuki31514</footer>
+    <footer>
+      POLYGON MINESWEEPER
+      <span>・</span>
+      Created by tanuki31514
+    </footer>
   </main>
 
   <script src="./script.js"></script>
 </body>
-
 </html>
