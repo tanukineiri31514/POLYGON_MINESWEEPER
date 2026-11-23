@@ -1,309 +1,714 @@
 
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111827">
-  <title>POLYGON MINESWEEPER</title>
-  <link rel="stylesheet" href="./style.css">
-</head>
+(() => {
+  "use strict";
 
-<body>
-  <main class="app">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">A DIFFERENT KIND OF MINESWEEPER</p>
-        <h1>POLYGON MINESWEEPER</h1>
-        <p class="subtitle">
-          五角形と六角形のマスから、爆弾を見つけ出そう。
-        </p>
-      </div>
+  const DIFFICULTIES = {
+    beginner: { name: "初級", h: 10, w: 10, bombs: 7, cell: 50 },
+    intermediate: { name: "中級", h: 16, w: 30, bombs: 35, cell: 30 },
+    advanced: { name: "上級", h: 25, w: 40, bombs: 130, cell: 25 },
+    expert: { name: "最上級", h: 40, w: 60, bombs: 210, cell: 25 }
+  };
 
-      <div class="top-actions">
-        <a
-          class="ghost-button collection-link"
-          href="https://tanukineiri31514.github.io/MINESWEEPER_COLLECTION/"
-          aria-label="ゲーム選択画面へ戻る"
-        >← ゲーム選択</a>
+  const $ = (id) => document.getElementById(id);
+  const menuScreen = $("menu-screen");
+  const gameScreen = $("game-screen");
+  const rulesScreen = $("rules-screen");
+  const canvas = $("board");
+  const ctx = canvas.getContext("2d");
+  const viewport = $("board-viewport");
+  const clearOverlay = $("clear-overlay");
 
-        <button id="help-button" class="icon-button"
-          type="button" aria-label="遊び方">?</button>
+  let game = null;
+  let timerId = null;
+  let clearOverlayTimerId = null;
+  let currentTab = "game";
+  let actionMode = "open";
+  let audioContext = null;
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 2;
+  const ZOOM_STEP = 0.1;
 
-        <button id="menu-button" class="ghost-button"
-          type="button">難易度選択</button>
-      </div>
-    </header>
+  const COLORS = {
+    closed: "#718096",
+    closedLight: "#8795a8",
+    closedDark: "#4b586b",
+    opened: "#dce3eb",
+    openedEdge: "#aab6c4",
+    grid: "#596579",
+    bomb: "#df5353",
+    flag: "#f06b69",
+    question: "#ffe38a",
+    text: "#172334"
+  };
 
-    <nav class="tab-menu" aria-label="ページ切り替え">
-      <button class="tab-button active"
-        data-tab="game" type="button">ゲーム</button>
-      <button class="tab-button"
-        data-tab="rules" type="button">ルール説明</button>
-    </nav>
+  // 難易度設定を、難易度選択画面とルール説明にも反映する。
+  function updateDifficultyInfo() {
+    for (const [mode, cfg] of Object.entries(DIFFICULTIES)) {
+      document.querySelectorAll(`[data-bomb-count="${mode}"]`).forEach((element) => {
+        element.textContent = cfg.bombs;
+      });
 
-    <!-- 難易度選択画面 -->
-    <section id="menu-screen" class="menu-screen panel">
-      <div class="section-heading">
-        <p class="eyebrow">SELECT MODE</p>
-        <h2>マスの形・難易度を選択</h2>
-        <p>
-          五角形は辺と角、六角形は辺を共有するマスの
-          爆弾数を数えます。
-        </p>
-      </div>
+      document.querySelectorAll(`[data-rule-bombs="${mode}"]`).forEach((element) => {
+        element.textContent = cfg.bombs;
+      });
+    }
+  }
 
-      <!-- 図形選択 -->
-      <div class="shape-grid" role="group" aria-label="マスの形">
-        <button class="shape-card selected"
-          data-shape="pentagon" type="button"
-          aria-pressed="true">
-          <svg viewBox="0 0 94 60" aria-hidden="true">
-            <polygon points="12,40 38,40 38,17 25,5 12,17"/>
-            <polygon points="38,40 64,40 64,17 51,5 38,17"/>
-            <polygon points="25,40 51,40 51,55 38,47 25,55"/>
-          </svg>
-          <strong>五角形</strong>
-          <small>辺・角の隣接（最大7マス）</small>
-        </button>
+  // クリア演出はクリック・タップまたは5秒後に閉じる。
+  // 遷移・リスタート時も必ずタイマーを解除して非表示に戻す。
+  function hideClearOverlay() {
+    if (clearOverlayTimerId !== null) {
+      window.clearTimeout(clearOverlayTimerId);
+      clearOverlayTimerId = null;
+    }
+    clearOverlay.classList.add("hidden");
+  }
 
-        <button class="shape-card"
-          data-shape="hexagon" type="button"
-          aria-pressed="false">
-          <svg viewBox="0 0 94 60" aria-hidden="true">
-            <polygon points="23,4 37,12 37,28 23,36 9,28 9,12"/>
-            <polygon points="51,4 65,12 65,28 51,36 37,28 37,12"/>
-            <polygon points="37,28 51,36 51,52 37,60 23,52 23,36"/>
-          </svg>
-          <strong>六角形</strong>
-          <small>辺の隣接（最大6マス）</small>
-        </button>
-      </div>
+  function showClearOverlay() {
+    hideClearOverlay();
+    clearOverlay.classList.remove("hidden");
+    clearOverlayTimerId = window.setTimeout(hideClearOverlay, 5000);
+  }
 
-      <!-- 4段階の難易度 -->
-      <div class="difficulty-grid">
-        <button class="difficulty-card"
-          data-difficulty="beginner" type="button">
-          <span class="difficulty-name">初級</span>
-          <strong>96 マス</strong>
-          <span>爆弾 <span data-bomb-count="beginner">15</span> 個</span>
-        </button>
+  function switchTab(tab) {
+    if (tab !== "game") hideClearOverlay();
+    currentTab = tab;
 
-        <button class="difficulty-card"
-          data-difficulty="intermediate" type="button">
-          <span class="difficulty-name">中級</span>
-          <strong>480 マス</strong>
-          <span>爆弾 <span data-bomb-count="intermediate">67</span> 個</span>
-        </button>
+    document.querySelectorAll("[data-tab]").forEach((button) => {
+      button.classList.toggle("active", button.dataset.tab === tab);
+    });
 
-        <button class="difficulty-card"
-          data-difficulty="advanced" type="button">
-          <span class="difficulty-name">上級</span>
-          <strong>1000 マス</strong>
-          <span>爆弾 <span data-bomb-count="advanced">165</span> 個</span>
-        </button>
+    const showGame = tab === "game";
+    menuScreen.classList.toggle("hidden", !showGame || game !== null);
+    gameScreen.classList.toggle("hidden", !showGame || game === null);
+    rulesScreen.classList.toggle("hidden", showGame);
+  }
 
-        <button class="difficulty-card"
-          data-difficulty="expert" type="button">
-          <span class="difficulty-name">最上級</span>
-          <strong>2400 マス</strong>
-          <span>爆弾 <span data-bomb-count="expert">360</span> 個</span>
-        </button>
-      </div>
+  // 操作モードを切り替える。
+  function setActionMode(mode) {
+    actionMode = mode;
 
-      <div class="rule-strip">
-        <span>操作モードを切り替えてマスを操作</span>
-        <span>右クリックで旗、Shift＋右クリックで？</span>
-        <span>最初のクリックで安全なマスが開きます</span>
-      </div>
-    </section>
+    document.querySelectorAll("[data-action-mode]").forEach((button) => {
+      const selected = button.dataset.actionMode === mode;
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
 
-    <!-- ゲーム画面 -->
-    <section id="game-screen" class="game-screen hidden">
-      <div class="hud panel">
-        <div class="hud-item">
-          <span class="hud-label">BOMBS</span>
-          <strong id="bomb-count">015</strong>
-        </div>
+    const hints = {
+      open: "マスをタップすると開きます（？マークも開けられます）",
+      flag: "マスをタップすると旗を立てる・外します",
+      question: "マスをタップすると？マークを仮置き・解除します"
+    };
+    $("action-mode-hint").textContent = hints[mode];
+  }
 
-        <div class="hud-item">
-          <span class="hud-label">FLAGS</span>
-          <strong id="flag-count">000</strong>
-        </div>
+  function createGame(mode) {
+    hideClearOverlay();
+    const cfg = DIFFICULTIES[mode];
 
-        <div class="hud-item timer-item">
-          <span class="hud-label">TIME</span>
-          <strong id="timer">000</strong>
-        </div>
+    game = {
+      ...cfg,
+      board: Array.from({ length: cfg.h }, () => Array(cfg.w).fill(0)),
+      opened: Array.from({ length: cfg.h }, () => Array(cfg.w).fill(false)),
+      flags: Array.from({ length: cfg.h }, () => Array(cfg.w).fill(false)),
+      questions: Array.from({ length: cfg.h }, () => Array(cfg.w).fill(false)),
+      generated: false,
+      over: false,
+      won: false,
+      startedAt: null,
+      endedAt: null,
+      openedCount: 0,
+      zoom: 1,
+      mode
+    };
 
-        <button id="restart-button" class="restart-button"
-          type="button" aria-label="リスタート">↻</button>
-      </div>
+    switchTab("game");
+    setActionMode("open");
 
-      <div class="game-meta">
-        <span id="current-mode">五角形 / 初級</span>
-        <span id="board-size">96 マス</span>
-        <span id="game-message" aria-live="polite">
-          最初のマスを選んでスタート！
-        </span>
-      </div>
+    $("current-mode").textContent = cfg.name;
+    $("board-size").textContent = `${cfg.h} × ${cfg.w}`;
+    $("bomb-count").textContent = String(cfg.bombs).padStart(3, "0");
+    $("flag-count").textContent = "000";
+    $("timer").textContent = "000";
+    updateZoomControls();
 
-      <!-- 操作モード -->
-      <div class="action-mode" role="group"
-        aria-label="マスの操作モード">
+    setMessage("最初のマスを選んでスタート！");
+    stopTimer();
+    viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
+    // ゲーム開始前から、全マスを伏せた状態で表示する。
+    renderBoard();
+    updateHud();
+    // 画面切り替え直後にレイアウトが確定した後も描画を保証する。
+    window.requestAnimationFrame(() => {
+      if (game && game.mode === mode && !game.generated) renderBoard();
+    });
+  }
 
-        <span class="action-mode-label">操作モード</span>
+  // 最初のクリック位置からランダムな順序でBFSを行い、
+  // 10〜15マスを連続した初期安全領域として選ぶ。
+  // 初手の安全領域は上下左右の4近傍で連結させる。
+  function createInitialSafeCells(firstY, firstX) {
+    const targetCount = 10 + Math.floor(Math.random() * 6);
+    const queue = [[firstY, firstX]];
+    const visited = new Set([`${firstY},${firstX}`]);
+    const safeCells = [[firstY, firstX]];
+    let head = 0;
 
-        <button id="open-mode-button"
-          class="mode-button active"
-          data-action-mode="open"
-          type="button" aria-pressed="true">
-          開く
-        </button>
+    while (head < queue.length && visited.size < targetCount) {
+      const [y, x] = queue[head++];
+      const neighbors = [];
 
-        <button id="flag-mode-button"
-          class="mode-button"
-          data-action-mode="flag"
-          type="button" aria-pressed="false">
-          ⚑ 旗を立てる
-        </button>
+      // 上下左右の4近傍だけを候補にする。
+      const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+      for (const [dy, dx] of directions) {
+        const ny = y + dy;
+        const nx = x + dx;
+        const key = `${ny},${nx}`;
 
-        <button id="question-mode-button"
-          class="mode-button"
-          data-action-mode="question"
-          type="button" aria-pressed="false">
-          ？ 仮置き
-        </button>
+        if (
+          inside(ny, nx) &&
+          !game.flags[ny][nx] &&
+          !visited.has(key)
+        ) {
+          neighbors.push([ny, nx, key]);
+        }
+      }
 
-        <span id="action-mode-hint" class="action-mode-hint">
-          マスをタップすると開きます
-        </span>
-      </div>
+      // 隣接候補の順番をランダム化する。
+      for (let i = neighbors.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [neighbors[i], neighbors[j]] = [neighbors[j], neighbors[i]];
+      }
 
-      <!-- 拡大縮小 -->
-      <div class="zoom-controls" aria-label="盤面の拡大縮小">
-        <button id="zoom-out-button"
-          type="button" aria-label="縮小">−</button>
-        <button id="zoom-reset-button"
-          type="button" aria-label="倍率を100%に戻す">100%</button>
-        <button id="zoom-in-button"
-          type="button" aria-label="拡大">＋</button>
-      </div>
+      // 訪問済みが目標数になった時点で追加を打ち切る。
+      // 追加するマスは必ず探索中のマスに隣接するため、
+      // safeCells全体はひと続きの領域になる。
+      for (const [ny, nx, key] of neighbors) {
+        if (visited.size >= targetCount) break;
+        if (visited.has(key)) continue;
 
-      <!-- 盤面 -->
-      <div id="board-viewport" class="board-viewport">
-        <div id="board-stage" class="board-stage">
-          <canvas id="board"
-            aria-label="多角形マインスイーパー盤面"></canvas>
-        </div>
-      </div>
+        visited.add(key);
+        safeCells.push([ny, nx]);
+        queue.push([ny, nx]);
+      }
+    }
 
-      <div class="bottom-bar">
-        <p id="neighbor-hint">
-          数字は辺・角で接するマスの爆弾数（最大7）
-        </p>
-        <p>スクロールして盤面全体を確認できます</p>
-      </div>
-    </section>
+    return safeCells;
+  }
 
-    <!-- ルール説明 -->
-    <section id="rules-screen" class="panel rules-screen hidden">
-      <div class="section-heading">
-        <p class="eyebrow">HOW TO PLAY</p>
-        <h2>ルール説明</h2>
-      </div>
+  // 初期安全領域には爆弾を置かず、その後に数字を計算する。
+  function placeBombs(safeCells) {
+    const safeSet = new Set(
+      safeCells.map(([y, x]) => `${y},${x}`)
+    );
+    const candidates = [];
 
-      <h3>基本ルール</h3>
-      <ul>
-        <li>マスを開いて、隠れた爆弾を避けます。</li>
-        <li>五角形は辺・頂点、六角形は辺で接するマスを数えます。</li>
-        <li>五角形は最大7マス、六角形は最大6マスです。</li>
-        <li>爆弾以外のマスをすべて開くとクリアです。</li>
-      </ul>
+    for (let y = 0; y < game.h; y++) {
+      for (let x = 0; x < game.w; x++) {
+        if (!safeSet.has(`${y},${x}`)) {
+          candidates.push([y, x]);
+        }
+      }
+    }
 
-      <h3>操作方法</h3>
-      <ul>
-        <li>「開く」モード：マスをタップして開きます。</li>
-        <li>「旗を立てる」モード：旗を立てる・外します。</li>
-        <li>「？ 仮置き」モード：？を付ける・外します。</li>
-        <li>旗と？は切り替え可能です。？のマスは開けます。</li>
-        <li>PC：右クリックで旗、Shift＋右クリックで？</li>
-        <li>Rキー：リスタート</li>
-        <li>Escキー：難易度選択に戻る</li>
-        <li>＋／−／100%ボタンで拡大縮小できます。</li>
-        <li>PCはCtrl＋ホイール、スマホはピンチ操作にも対応。</li>
-      </ul>
+    // 爆弾の配置場所をシャッフルし、必要数だけ配置する。
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
 
-      <h3>特殊ルール</h3>
-      <ul>
-        <li>初手は安全で、原則8マス以上が開放されます。</li>
-        <li>数字が0の場合、隣接するマスも自動で開きます。</li>
-      </ul>
+    for (let i = 0; i < game.bombs; i++) {
+      const [y, x] = candidates[i];
+      game.board[y][x] = -1;
+    }
 
-      <h3>難易度</h3>
-      <ul>
-        <li>初級：8×12 / 爆弾
-          <span data-rule-bombs="beginner">15</span>個
-        </li>
-        <li>中級：16×30 / 爆弾
-          <span data-rule-bombs="intermediate">67</span>個
-        </li>
-        <li>上級：25×40 / 爆弾
-          <span data-rule-bombs="advanced">165</span>個
-        </li>
-        <li>最上級：40×60 / 爆弾
-          <span data-rule-bombs="expert">360</span>個
-        </li>
-      </ul>
+    // 爆弾をすべて置いた後で、各マスの周囲24マスの爆弾数を数える。
+    for (let y = 0; y < game.h; y++) {
+      for (let x = 0; x < game.w; x++) {
+        if (game.board[y][x] !== -1) continue;
 
-      <h3>数字の見方</h3>
-      <p>
-        五角形は頂点だけで接するマスも数えます。
-        六角形は辺を共有するマスだけを数えます。
-        同じ爆弾は一度しか数えません。
-      </p>
-    </section>
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            if (dy === 0 && dx === 0) continue;
 
-    <!-- ヘルプ -->
-    <dialog id="help-dialog" class="help-dialog">
-      <form method="dialog">
-        <button class="dialog-close"
-          type="submit" aria-label="閉じる">×</button>
-        <p class="eyebrow">HOW TO PLAY</p>
-        <h2>操作方法</h2>
-        <ul>
-          <li>五角形：辺・角で接するマスの爆弾数（最大7）</li>
-          <li>六角形：辺で接するマスの爆弾数（最大6）</li>
-          <li>「開く」：マスを開きます。</li>
-          <li>「旗」：旗を立てる・外す。</li>
-          <li>「？」：仮置き・解除。</li>
-          <li>右クリック：旗、Shift＋右クリック：？</li>
-          <li>R：リスタート / Esc：難易度選択</li>
-          <li>数字が0なら周囲も自動で開きます。</li>
-        </ul>
-        <button class="primary-button dialog-ok"
-          type="submit">わかった</button>
-      </form>
-    </dialog>
+            const ny = y + dy;
+            const nx = x + dx;
 
-    <!-- クリア演出 -->
-    <div id="clear-overlay" class="hidden"
-      role="status" aria-live="polite">
-      <div class="clear-message">
-        <div>クリア！おめでとう！！</div>
-        <p class="clear-dismiss-hint">
-          クリック・タップで閉じる（5秒後に自動で消えます）
-        </p>
-      </div>
-    </div>
+            if (!inside(ny, nx)) continue;
+            if (game.board[ny][nx] === -1) continue;
 
-    <footer>
-      POLYGON MINESWEEPER
-      <span>・</span>
-      Created by tanuki31514
-    </footer>
-  </main>
+            game.board[ny][nx]++;
+          }
+        }
+      }
+    }
+  }
 
-  <script src="./script.js"></script>
-</body>
-</html>
+  function inside(y, x) {
+    return y >= 0 && y < game.h && x >= 0 && x < game.w;
+  }
+
+  function reveal(y, x) {
+    if (!inside(y, x) || game.over || game.opened[y][x] || game.flags[y][x]) return;
+
+    let initialSafeCells = null;
+
+    if (!game.generated) {
+      // 1. 初回クリックの座標を始点として4近傍BFSで安全領域を決定する。
+      //    初級はクリックした1マスのみを保護する。
+      initialSafeCells = game.mode === "beginner"
+        ? [[y, x]]
+        : createInitialSafeCells(y, x);
+
+      // 2. 安全領域以外に爆弾を置く。
+      // 3. 爆弾配置が完了してから周囲5×5の爆弾数を計算する。
+      placeBombs(initialSafeCells);
+      game.generated = true;
+      game.startedAt = Date.now();
+      startTimer();
+    }
+
+    if (game.board[y][x] === -1) {
+      game.questions[y][x] = false;
+      game.opened[y][x] = true;
+      playSound("bomb");
+      finishGame(false);
+      return;
+    }
+
+    // 4. 中級・上級の初回のみ、BFSで確保した10〜15マスを開く。
+    //    続けて、その中の0マスから周囲5×5に展開する。
+    //    2回目以降はクリックしたマスから通常の0展開を行う。
+    const queue = initialSafeCells ?? [[y, x]];
+    const queued = new Set(queue.map(([qy, qx]) => `${qy},${qx}`));
+    let head = 0;
+
+    while (head < queue.length) {
+      const [cy, cx] = queue[head++];
+      if (game.opened[cy][cx] || game.flags[cy][cx]) continue;
+      if (game.board[cy][cx] === -1) continue;
+
+      // 「？」は目印なので、開いたら自動で解除する。
+      game.questions[cy][cx] = false;
+      game.opened[cy][cx] = true;
+      game.openedCount++;
+
+      if (game.board[cy][cx] !== 0) continue;
+
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          if (dy === 0 && dx === 0) continue;
+          const ny = cy + dy;
+          const nx = cx + dx;
+          const key = `${ny},${nx}`;
+
+          if (
+            inside(ny, nx) &&
+            !game.opened[ny][nx] &&
+            !game.flags[ny][nx] &&
+            game.board[ny][nx] !== -1 &&
+            !queued.has(key)
+          ) {
+            queued.add(key);
+            queue.push([ny, nx]);
+          }
+        }
+      }
+    }
+
+    if (game.openedCount === game.h * game.w - game.bombs) {
+      finishGame(true);
+    } else {
+      setMessage("爆弾を避けて進もう！");
+      playSound("open");
+    }
+
+    renderBoard();
+    updateHud();
+  }
+
+  function toggleFlag(y, x) {
+    if (!inside(y, x) || game.over || game.opened[y][x]) return;
+
+    // 旗と「？」は同時に存在しない。旗を立てたら「？」を消す。
+    game.flags[y][x] = !game.flags[y][x];
+    if (game.flags[y][x]) game.questions[y][x] = false;
+
+    renderBoard();
+    updateHud();
+  }
+
+  function toggleQuestion(y, x) {
+    if (!inside(y, x) || game.over || game.opened[y][x]) return;
+
+    // 「？」は爆弾確定ではなく仮置き。旗から直接切り替えられる。
+    game.questions[y][x] = !game.questions[y][x];
+    if (game.questions[y][x]) game.flags[y][x] = false;
+
+    renderBoard();
+    updateHud();
+  }
+
+  function finishGame(won) {
+    game.over = true;
+    game.won = won;
+    game.endedAt = Date.now();
+
+    stopTimer();
+
+    if (!won) {
+      for (let y = 0; y < game.h; y++) {
+        for (let x = 0; x < game.w; x++) {
+          if (game.board[y][x] === -1) game.opened[y][x] = true;
+        }
+      }
+
+      setMessage("ゲームオーバー — もう一度挑戦しよう");
+    } else {
+      setMessage("クリア！おめでとう！！");
+      showClearOverlay();
+      playSound("clear");
+    }
+
+    renderBoard();
+    updateHud();
+  }
+
+  function updateZoomControls() {
+    if (!game) return;
+    $("zoom-reset-button").textContent = `${Math.round(game.zoom * 100)}%`;
+    $("zoom-out-button").disabled = game.zoom <= MIN_ZOOM;
+    $("zoom-in-button").disabled = game.zoom >= MAX_ZOOM;
+  }
+
+  function setZoom(nextZoom) {
+    if (!game) return;
+    const oldCellSize = game.cell * game.zoom;
+    const relativeX = (viewport.scrollLeft + viewport.clientWidth / 2) / oldCellSize;
+    const relativeY = (viewport.scrollTop + viewport.clientHeight / 2) / oldCellSize;
+
+    game.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.round(nextZoom * 10) / 10));
+    renderBoard();
+    updateZoomControls();
+
+    const newCellSize = game.cell * game.zoom;
+    viewport.scrollLeft = Math.max(0, relativeX * newCellSize - viewport.clientWidth / 2);
+    viewport.scrollTop = Math.max(0, relativeY * newCellSize - viewport.clientHeight / 2);
+  }
+
+  // 外部音源を使わずWeb Audio APIで短い効果音を生成する。
+  function playSound(type) {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      if (!audioContext) audioContext = new AudioContextClass();
+      if (audioContext.state === "suspended") audioContext.resume();
+
+      const now = audioContext.currentTime;
+      const master = audioContext.createGain();
+      master.connect(audioContext.destination);
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(type === "clear" ? 0.16 : 0.09, now + 0.015);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + (type === "clear" ? 0.9 : 0.22));
+
+      if (type === "clear") {
+        [523.25, 659.25, 783.99, 1046.5].forEach((frequency, index) => {
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(frequency, now + index * 0.13);
+          gain.gain.setValueAtTime(0.0001, now);
+          gain.gain.setValueAtTime(0.55, now + index * 0.13);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.13 + 0.24);
+          oscillator.connect(gain);
+          gain.connect(master);
+          oscillator.start(now + index * 0.13);
+          oscillator.stop(now + index * 0.13 + 0.26);
+        });
+      } else {
+        const oscillator = audioContext.createOscillator();
+        oscillator.connect(master);
+        if (type === "bomb") {
+          oscillator.type = "sawtooth";
+          oscillator.frequency.setValueAtTime(150, now);
+          oscillator.frequency.exponentialRampToValueAtTime(38, now + 0.2);
+        } else {
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(660, now);
+          oscillator.frequency.exponentialRampToValueAtTime(440, now + 0.09);
+        }
+        oscillator.start(now);
+        oscillator.stop(now + 0.22);
+      }
+    } catch (error) {
+      // 効果音が使えない環境でもゲーム進行には影響させない。
+    }
+  }
+
+  function setMessage(message) {
+    $("game-message").textContent = message;
+  }
+
+  function updateHud() {
+    if (!game) return;
+
+    let flags = 0;
+
+    for (const row of game.flags) {
+      for (const value of row) {
+        if (value) flags++;
+      }
+    }
+
+    $("flag-count").textContent = String(flags).padStart(3, "0");
+    $("bomb-count").textContent = String(game.bombs).padStart(3, "0");
+    $("timer").textContent = String(elapsedSeconds()).padStart(3, "0");
+  }
+
+  function elapsedSeconds() {
+    if (!game || game.startedAt === null) return 0;
+
+    const end = game.endedAt ?? Date.now();
+    return Math.floor((end - game.startedAt) / 1000);
+  }
+
+  function startTimer() {
+    stopTimer();
+    timerId = window.setInterval(updateHud, 250);
+  }
+
+  function stopTimer() {
+    if (timerId !== null) window.clearInterval(timerId);
+    timerId = null;
+  }
+
+  function drawBomb(x, y, size) {
+    ctx.fillStyle = COLORS.bomb;
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size * 0.25, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = "#9d3038";
+    ctx.lineWidth = Math.max(1, size * 0.035);
+    ctx.stroke();
+
+    for (let i = 0; i < 4; i++) {
+      const a = i * Math.PI / 2;
+
+      ctx.beginPath();
+      ctx.moveTo(
+        x + size / 2 + Math.cos(a) * size * 0.27,
+        y + size / 2 + Math.sin(a) * size * 0.27
+      );
+      ctx.lineTo(
+        x + size / 2 + Math.cos(a) * size * 0.36,
+        y + size / 2 + Math.sin(a) * size * 0.36
+      );
+      ctx.stroke();
+    }
+  }
+
+  function drawFlag(x, y, size) {
+    ctx.fillStyle = COLORS.flag;
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.30, y + size * 0.20);
+    ctx.lineTo(x + size * 0.72, y + size * 0.36);
+    ctx.lineTo(x + size * 0.30, y + size * 0.53);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "#f8b1a8";
+    ctx.lineWidth = Math.max(1, size * 0.045);
+    ctx.beginPath();
+    ctx.moveTo(x + size * 0.29, y + size * 0.18);
+    ctx.lineTo(x + size * 0.29, y + size * 0.78);
+    ctx.lineTo(x + size * 0.72, y + size * 0.78);
+    ctx.stroke();
+  }
+
+  function drawQuestion(x, y, size) {
+    ctx.font = `800 ${Math.max(12, Math.floor(size * 0.72))}px "Barlow Condensed", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = Math.max(2, size * 0.09);
+    ctx.strokeStyle = "#4b586b";
+    ctx.strokeText("?", x + size / 2, y + size / 2 + size * 0.035);
+    ctx.fillStyle = COLORS.question;
+    ctx.fillText("?", x + size / 2, y + size / 2 + size * 0.035);
+  }
+
+  function renderBoard() {
+    if (!game) return;
+
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const cellSize = game.cell * game.zoom;
+    const cssWidth = game.w * cellSize;
+    const cssHeight = game.h * cellSize;
+
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    canvas.style.width = `${cssWidth}px`;
+    canvas.style.height = `${cssHeight}px`;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+    for (let y = 0; y < game.h; y++) {
+      for (let x = 0; x < game.w; x++) {
+        const px = x * cellSize;
+        const py = y * cellSize;
+        const size = cellSize;
+        const opened = game.opened[y][x];
+
+        ctx.fillStyle = opened ? COLORS.opened : COLORS.closed;
+        ctx.fillRect(px, py, size, size);
+
+        if (!opened) {
+          ctx.fillStyle = COLORS.closedLight;
+          ctx.fillRect(px + 1, py + 1, size - 2, Math.max(2, size * 0.07));
+
+          ctx.fillStyle = COLORS.closedDark;
+          ctx.fillRect(
+            px + 1,
+            py + size - Math.max(3, size * 0.07),
+            size - 2,
+            Math.max(2, size * 0.07)
+          );
+        }
+
+        if (opened && game.board[y][x] === -1) {
+          drawBomb(px, py, size);
+        } else if (opened && game.board[y][x] > 0) {
+          const value = game.board[y][x];
+          const numberColors = [
+            "",
+            "#2464d8",
+            "#21834a",
+            "#d83d42",
+            "#7650bd",
+            "#a45c32",
+            "#168b9b",
+            "#27313e",
+            "#687386"
+          ];
+
+          ctx.fillStyle = numberColors[value] || "#182333";
+          ctx.font = `700 ${Math.max(10, Math.floor(size * 0.48))}px "Noto Sans JP", sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(String(value), px + size / 2, py + size / 2 + 1);
+        } else if (!opened && game.flags[y][x]) {
+          drawFlag(px, py, size);
+        } else if (!opened && game.questions[y][x]) {
+          drawQuestion(px, py, size);
+        }
+
+        ctx.strokeStyle = opened ? COLORS.openedEdge : COLORS.grid;
+        ctx.lineWidth = Math.max(1, size >= 30 ? 1.5 : 1);
+        ctx.strokeRect(px + 0.5, py + 0.5, size - 1, size - 1);
+      }
+    }
+  }
+
+  function canvasCellFromEvent(event) {
+    const rect = canvas.getBoundingClientRect();
+
+    // getBoundingClientRect() はCSSピクセルなので、DPR補正は不要。
+    return {
+      x: Math.floor((event.clientX - rect.left) / (game.cell * game.zoom)),
+      y: Math.floor((event.clientY - rect.top) / (game.cell * game.zoom))
+    };
+  }
+
+  function handleCell(event, mode) {
+    if (!game || game.over) return;
+
+    const { x, y } = canvasCellFromEvent(event);
+    if (!inside(y, x)) return;
+
+    if (mode === "flag") {
+      toggleFlag(y, x);
+    } else if (mode === "question") {
+      toggleQuestion(y, x);
+    } else {
+      reveal(y, x);
+    }
+  }
+
+  // キャプチャ段階で判定するため、クリアを発生させたクリックでは
+  // 演出が消えず、その次のクリック・タップで閉じられる。
+  // overlay自体はクリックを透過させるので、メニューへの移動も妨げない。
+  document.addEventListener("click", () => {
+    if (!clearOverlay.classList.contains("hidden")) hideClearOverlay();
+  }, true);
+
+  // 左クリック・タップ：選択中のモードで操作
+  canvas.addEventListener("click", (event) => {
+    if (event.button !== 0) return;
+    handleCell(event, actionMode);
+  });
+
+  // PCの右クリック：旗。Shift + 右クリック：「？」を仮置き。
+  canvas.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    handleCell(event, event.shiftKey ? "question" : "flag");
+  });
+
+  // 操作モード切り替えボタン
+  document.querySelectorAll("[data-action-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setActionMode(button.dataset.actionMode);
+    });
+  });
+
+  document.querySelectorAll("[data-tab]").forEach((button) => {
+    button.addEventListener("click", () => switchTab(button.dataset.tab));
+  });
+
+  document.querySelectorAll("[data-difficulty]").forEach((button) => {
+    button.addEventListener("click", () => createGame(button.dataset.difficulty));
+  });
+
+  $("zoom-out-button").addEventListener("click", () => {
+    if (game) setZoom(game.zoom - ZOOM_STEP);
+  });
+
+  $("zoom-in-button").addEventListener("click", () => {
+    if (game) setZoom(game.zoom + ZOOM_STEP);
+  });
+
+  $("zoom-reset-button").addEventListener("click", () => {
+    if (game) setZoom(1);
+  });
+
+  $("restart-button").addEventListener("click", () => {
+    if (game) createGame(game.mode);
+  });
+
+  $("menu-button").addEventListener("click", () => {
+    hideClearOverlay();
+    stopTimer();
+    game = null;
+    switchTab("game");
+  });
+
+  $("help-button").addEventListener("click", () => $("help-dialog").showModal());
+
+  // 初期表示時に難易度情報を反映
+  updateDifficultyInfo();
+  switchTab("game");
+  setActionMode("open");
+
+  window.addEventListener("resize", () => {
+    if (game) renderBoard();
+  });
+
+  // キーボード操作：Rでリスタート、Escapeで難易度選択へ
+  window.addEventListener("keydown", (event) => {
+    if (!game || $("help-dialog").open) return;
+
+    if (event.key.toLowerCase() === "r") createGame(game.mode);
+    if (event.key === "Escape") $("menu-button").click();
+  });
+})();
