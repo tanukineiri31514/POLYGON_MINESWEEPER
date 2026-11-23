@@ -11,7 +11,7 @@
   const SHAPES = {
     pentagon: {
       label: "五角形", maxNeighbors: 7,
-      bombs: { beginner: 15, intermediate: 67, advanced: 150 },
+      bombs: { beginner: 15, intermediate: 67, advanced: 165 },
       width: { beginner: 55, intermediate: 40, advanced: 32 },
       wall: { beginner: 38, intermediate: 29, advanced: 24 },
       roof: { beginner: 23, intermediate: 18, advanced: 15 }
