@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -24,7 +25,11 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 50% -20%, rgba(48, 88, 125, .35), transparent 55%),
+    radial-gradient(
+      ellipse at 50% -20%,
+      rgba(48, 88, 125, .35),
+      transparent 55%
+    ),
     var(--bg);
   color: var(--text);
   font-family: "Noto Sans JP", sans-serif;
@@ -40,6 +45,7 @@ button {
   padding: 28px 24px 18px;
 }
 
+/* ヘッダー */
 .topbar {
   display: flex;
   align-items: center;
@@ -57,7 +63,8 @@ button {
 
 h1 {
   margin: 0;
-  font: 800 clamp(34px, 6vw, 54px)/.95 "Barlow Condensed", sans-serif;
+  font: 800 clamp(34px, 6vw, 54px)/.95
+    "Barlow Condensed", sans-serif;
   letter-spacing: .025em;
 }
 
@@ -106,6 +113,21 @@ h1 span {
   color: var(--accent);
 }
 
+/* ゲーム選択へ戻るリンク */
+.top-actions .collection-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.top-actions .collection-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* 共通パネル */
 .panel {
   background: rgba(21, 31, 49, .94);
   border: 1px solid var(--line);
@@ -113,6 +135,45 @@ h1 span {
   box-shadow: 0 18px 50px rgba(0, 0, 0, .18);
 }
 
+.hidden {
+  display: none !important;
+}
+
+/* タブ */
+.tab-menu {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+
+.tab-button {
+  padding: 10px 18px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--muted);
+  cursor: pointer;
+  transition: .15s ease;
+}
+
+.tab-button:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.tab-button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #10202a;
+  font-weight: 700;
+}
+
+.tab-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* メニュー画面 */
 .menu-screen {
   padding: clamp(22px, 5vw, 48px);
 }
@@ -128,15 +189,78 @@ h1 span {
   font-size: 25px;
 }
 
-.section-heading>p:last-child {
+.section-heading > p:last-child {
   margin: 9px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
 
+/* POLYGON固有：図形選択 */
+.shape-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 25px;
+}
+
+.shape-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: linear-gradient(155deg, #1c2b42, #141e2f);
+  color: var(--text);
+  padding: 14px 9px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition:
+    transform .15s,
+    border-color .15s,
+    background .15s;
+}
+
+.shape-card svg {
+  width: 94px;
+  height: 60px;
+  fill: #718096;
+  stroke: #aab6c4;
+  stroke-width: 1.4;
+}
+
+.shape-card strong {
+  font-size: 16px;
+}
+
+.shape-card small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.shape-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.shape-card.selected {
+  border-color: var(--accent);
+  background: #20364b;
+}
+
+.shape-card.selected strong {
+  color: var(--accent);
+}
+
+.shape-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* 4段階の難易度 */
 .difficulty-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -153,7 +277,10 @@ h1 span {
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: transform .15s, border-color .15s, background .15s;
+  transition:
+    transform .15s,
+    border-color .15s,
+    background .15s;
 }
 
 .difficulty-card:hover {
@@ -172,7 +299,7 @@ h1 span {
   font: 700 34px "Barlow Condensed", sans-serif;
 }
 
-.difficulty-card>span:not(.difficulty-name) {
+.difficulty-card > span:not(.difficulty-name) {
   font-size: 13px;
 }
 
@@ -197,16 +324,14 @@ h1 span {
   margin-right: 7px;
 }
 
-.hidden {
-  display: none !important;
-}
-
+/* ゲーム画面 */
 .game-screen {
   display: flex;
   flex-direction: column;
   gap: 13px;
 }
 
+/* 爆弾数・旗・タイマー */
 .hud {
   display: flex;
   align-items: center;
@@ -267,7 +392,7 @@ h1 span {
   color: var(--text);
 }
 
-/* 操作モード切り替え */
+/* 操作モード */
 .action-mode {
   display: flex;
   align-items: center;
@@ -321,6 +446,40 @@ h1 span {
   font-size: 11px;
 }
 
+/* 盤面の拡大縮小 */
+.zoom-controls {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.zoom-controls button {
+  min-width: 42px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.zoom-controls button:hover {
+  border-color: var(--accent);
+}
+
+.zoom-controls button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
+#zoom-reset-button {
+  min-width: 65px;
+}
+
+/* Canvas盤面 */
 .board-viewport {
   height: min(68vh, 690px);
   min-height: 260px;
@@ -346,7 +505,7 @@ h1 span {
 #board {
   display: block;
   image-rendering: pixelated;
-  touch-action: pan-x pan-y;
+  touch-action: none;
   user-select: none;
 }
 
@@ -362,6 +521,25 @@ h1 span {
   margin: 0;
 }
 
+/* ルール説明 */
+.rules-screen {
+  padding: clamp(20px, 5vw, 42px);
+}
+
+.rules-screen h3 {
+  margin: 24px 0 10px;
+}
+
+.rules-screen li {
+  margin: 7px 0;
+}
+
+.rules-screen p,
+.rules-screen li {
+  line-height: 1.8;
+}
+
+/* ヘルプ */
 .help-dialog {
   width: min(480px, calc(100% - 30px));
   border: 1px solid var(--line);
@@ -414,6 +592,43 @@ h1 span {
   cursor: pointer;
 }
 
+/* クリア演出 */
+#clear-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 12, 24, .58);
+  pointer-events: none;
+}
+
+#clear-overlay.hidden {
+  display: none !important;
+}
+
+#clear-overlay .clear-message {
+  padding: 32px 40px;
+  border: 2px solid var(--accent);
+  border-radius: 20px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: clamp(28px, 6vw, 64px);
+  font-weight: 800;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .45);
+}
+
+#clear-overlay .clear-dismiss-hint {
+  margin: 12px 0 0;
+  color: #b9cadb;
+  font-size: clamp(12px, 2vw, 15px);
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+/* フッター */
 footer {
   padding: 25px 0 4px;
   text-align: center;
@@ -434,16 +649,73 @@ footer span {
 
   .topbar {
     align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 18px;
   }
 
+  .topbar > div:first-child {
+    flex-basis: 100%;
+  }
+
+  h1 {
+    font-size: clamp(27px, 7vw, 45px);
+  }
+
   .subtitle {
-    max-width: 230px;
+    max-width: 100%;
     font-size: 11px;
   }
 
   .top-actions {
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 6px;
+  }
+
+  .top-actions .collection-link {
+    padding: 10px 12px;
+  }
+
+  .shape-grid {
+    gap: 8px;
+  }
+
+  .shape-card {
+    padding: 10px 5px;
+  }
+
+  .shape-card svg {
+    width: 75px;
+    height: 48px;
+  }
+
+  .shape-card strong {
+    font-size: 13px;
+  }
+
+  .shape-card small {
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .difficulty-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .difficulty-card {
+    min-height: 145px;
+    padding: 14px 7px;
+  }
+
+  .difficulty-card strong {
+    font-size: clamp(21px, 6vw, 29px);
+  }
+
+  .difficulty-card > span:not(.difficulty-name) {
+    font-size: 12px;
   }
 
   .action-mode {
@@ -463,88 +735,20 @@ footer span {
     grid-column: 1 / -1;
     margin-left: 0;
   }
-}
 
-/* 盤面の拡大縮小 */
-.zoom-controls { display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
-.zoom-controls button { min-width: 42px; padding: 8px 12px; border: 1px solid #2c3b53; border-radius: 9px; background: #1b2940; color: #edf3fb; cursor: pointer; }
-.zoom-controls button:disabled { opacity: .4; cursor: default; }
-#zoom-reset-button { min-width: 65px; }
-/* クリア演出 */
-#clear-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: rgba(5, 12, 24, .58); pointer-events: none; }
-#clear-overlay.hidden { display: none !important; }
-#clear-overlay .clear-message { padding: 32px 40px; border: 2px solid #66d9c3; border-radius: 20px; background: #151f31; color: #edf3fb; font-size: clamp(28px, 6vw, 64px); font-weight: 800; text-align: center; box-shadow: 0 24px 70px rgba(0, 0, 0, .45); }
+  .game-meta {
+    flex-wrap: wrap;
+  }
 
-/* クリア表示中も背景のボタンを押せる。クリックで演出は消える。 */
-#clear-overlay .clear-dismiss-hint {
-  margin: 12px 0 0;
-  color: #b9cadb;
-  font-size: clamp(12px, 2vw, 15px);
-  font-weight: 500;
-  letter-spacing: normal;
-}
+  #game-message {
+    margin-left: 0;
+  }
 
+  .bottom-bar {
+    flex-wrap: wrap;
+  }
 
-/* POLYGON固有: 形状選択。その他のUIは24 MINESWEEPERと共通 */
-.shape-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 25px;
-}
-.shape-card {
-  min-width: 0;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  background: linear-gradient(155deg, #1c2b42, #141e2f);
-  color: var(--text);
-  padding: 14px 9px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  transition: transform .15s, border-color .15s, background .15s;
-}
-.shape-card svg { width: 94px; height: 60px; fill: #718096; stroke: #aab6c4; stroke-width: 1.4; }
-.shape-card strong { font-size: 16px; }
-.shape-card small { font-size: 12px; color: var(--muted); }
-.shape-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-.shape-card.selected { border-color: var(--accent); background: #20364b; }
-.shape-card.selected strong { color: var(--accent); }
-.shape-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-#board { touch-action: none; }
-@media (max-width: 700px) {
-  .shape-grid { gap: 8px; }
-  .shape-card { padding: 10px 5px; }
-  .shape-card svg { width: 75px; height: 48px; }
-  .shape-card strong { font-size: 13px; }
-  .shape-card small { font-size: 10px; text-align: center; }
-  .difficulty-grid { gap: 8px; }
-  .difficulty-card { min-height: 140px; padding: 12px 6px; }
-  .difficulty-card strong { font-size: 24px; }
-  .difficulty-card>span:not(.difficulty-name) { font-size: 11px; }
-  /* タイトルが長いため、スマホのみ右上の操作を独立した行にする。 */
-  .topbar { flex-wrap: wrap; gap: 9px; }
-  .topbar > div:first-child { flex-basis: 100%; }
-  .top-actions { margin-left: auto; }
-}
-
-
-/* ゲーム選択画面への戻りリンク（24 / POLY 共通） */
-.top-actions .collection-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.top-actions .collection-link:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-@media (max-width: 700px) {
-  .topbar { flex-wrap: wrap; gap: 10px; }
-  .top-actions { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
-  .top-actions .collection-link { padding: 10px 12px; }
+  #clear-overlay .clear-message {
+    padding: 26px 20px;
+  }
 }
