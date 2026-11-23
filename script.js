@@ -18,7 +18,7 @@
     },
     hexagon: {
       label: "六角形", maxNeighbors: 6,
-      bombs: { beginner: 15, intermediate: 67, advanced: 150 },
+      bombs: { beginner: 15, intermediate: 67, advanced: 180 },
       radius: { beginner: 31, intermediate: 22, advanced: 20 }
     }
   };
