@@ -5,7 +5,8 @@
   const DIFFICULTIES = {
     beginner: { name: "初級", h: 8, w: 12, count: 96, cell: 50 },
     intermediate: { name: "中級", h: 16, w: 30, count: 480, cell: 30 },
-    advanced: { name: "上級", h: 25, w: 40, count: 1000, cell: 25 }
+    advanced: { name: "上級", h: 25, w: 40, count: 1000, cell: 25 },
+    roof: {name:"最上級",h:40,w:60,count:2400,cell:25}
   };
 
   const SHAPES = {
